@@ -5,29 +5,43 @@ namespace qmc
 {
     unsigned int term::size = 0;
 
-    term & term::operator=(const term & te)
-    {
-        num = te.num;
-        mask = te.mask;
-        return *this;
-    }
-
+////////////////////////////////////////////////////
     bool term::operator<(const term & te) const
     {
-        if (num < te.num)
-            return true;
-        else if (num == te.num && mask < te.mask)
-            return true;
-        return false;
+        if (mask_amount == te.mask_amount)
+        {
+            if (num < te.num)
+                return true;
+            else if (num == te.num && mask < te.mask)
+                return true;
+            return false;
+        }
+        else
+        {
+            if (mask_amount > te.mask_amount)
+                return true;
+            else
+                return false;
+        }
     }
 
     bool term::operator>(const term & te) const
     {
-        if (num > te.num)
-            return true;
-        else if (num == te.num && mask > te.mask)
-            return true;
-        return false;
+        if (mask_amount == te.mask_amount)
+        {
+            if (num > te.num)
+                return true;
+            else if (num == te.num && mask < te.mask)
+                return true;
+            return false;
+        }
+        else
+        {
+            if (mask_amount > te.mask_amount)
+                return true;
+            else
+                return false;
+        }
     }
 
     bool term::operator==(const term & te) const
@@ -36,12 +50,25 @@ namespace qmc
             return true;
         return false;
     }
+////////////////////////////////////////////////////
 
 
-    int term::how_many_one() const
+    unsigned int term::how_many_one() const
     {
-        int count = 0;
+        unsigned int count = 0;
         unsigned long tmp = num;
+        for (int i = term::size; i > 0; --i)
+        {
+            count += tmp % 2;
+            tmp /= 2;
+        }
+        return count;
+    }
+
+    unsigned int term::c_mask_amount()
+    {
+        unsigned int count = 0;
+        unsigned long tmp = mask;
         for (int i = term::size; i > 0; --i)
         {
             count += tmp % 2;
@@ -92,4 +119,32 @@ namespace qmc
         }
         return os;
     }
+
+    std::ostream & term::out_for_out(std::ostream & os) const
+    {
+        return os;
+    }
+
+///////////////////////////////////////
+
+
+    next_term::next_term(const set<term> & s1, const set<term> & s2)
+    {
+        for_each(s1.begin(), s1.end(), [&](term te){ v1.push_back(te); });
+        for_each(s2.begin(), s2.end(), [&](term te){ v2.push_back(te); });
+
+        unsigned long temp;
+        for (unsigned long i = 0; i < v1.size(); ++i)
+        {
+            for (unsigned long j = 0; j < v2.size(); ++j)
+            {
+                temp = v1[i].compare(v2[j]);
+                if (temp)
+                {
+                    v1[i].pr_im = v2[j].pr_im = false;
+                    v_.push_back( term{ v1[i], temp } );
+                }
+            }
+        }
+    };
 }
